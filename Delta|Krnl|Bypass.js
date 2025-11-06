@@ -8,8 +8,8 @@
 // @match        *://*.deltaios-executor.com/*
 // @match        *://krnl-ios.com/*
 // @match        *://.krnl-ios.com/*
-// @downloadURL  https://raw.githubusercontent.com/blan3bo1/userscripts/refs/heads/main/Delta%20%7C%20Krnl%20Bypass.js
-// @updateURL    https://raw.githubusercontent.com/blan3bo1/userscripts/refs/heads/main/Delta%20%7C%20Krnl%20Bypass.js
+// @downloadURL  https://raw.githubusercontent.com/blan3bo1/userscripts/refs/heads/main/Delta%7CKrnl%7CBypass.js
+// @updateURL    https://raw.githubusercontent.com/blan3bo1/userscripts/refs/heads/main/Delta%7CKrnl%7CBypass.js
 // @icon         https://static.thenounproject.com/png/3560673-200.png
 // @grant        none
 // @run-at       document-start
