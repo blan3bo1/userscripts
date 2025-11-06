@@ -8,6 +8,7 @@
 // @match        *://*.deltaios-executor.com/*
 // @match        *://krnl-ios.com/*
 // @match        *://.krnl-ios.com/*
+// @icon         https://static.thenounproject.com/png/3560673-200.png
 // @grant        none
 // @run-at       document-start
 // ==/UserScript==
