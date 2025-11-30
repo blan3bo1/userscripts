@@ -1,13 +1,17 @@
 // ==UserScript==
-// @name         Delta Executor Bypass & Ad Block v4
+// @name         Delta Executor Bypass & Ad Block v5
 // @namespace    http://tampermonkey.net/
-// @version      4.0
+// @version      5.0
 // @description  Bypass installation steps and block ads for Delta Executor - Complete bypass
 // @author       blankboii
 // @match        *://deltaios-executor.com/*
 // @match        *://*.deltaios-executor.com/*
 // @match        *://krnl-ios.com/*
-// @match        *://.krnl-ios.com/*
+// @match        *://*.krnl-ios.com/*
+// @match        *://*/*unlock*
+// @match        *://*/*premium*
+// @match        *://*/*access*
+// @match        *://*/*verify*
 // @downloadURL  https://raw.githubusercontent.com/blan3bo1/userscripts/refs/heads/main/Delta%7CKrnl%7CBypass.js
 // @updateURL    https://raw.githubusercontent.com/blan3bo1/userscripts/refs/heads/main/Delta%7CKrnl%7CBypass.js
 // @icon         https://static.thenounproject.com/png/3560673-200.png
@@ -26,6 +30,8 @@
     }
 
     function init() {
+        console.log('Delta/Krnl Bypass v5 activated');
+
         // Block analytics and ad scripts
         const blockedScripts = [
             'clarity',
@@ -136,135 +142,176 @@
             }
         }
 
-        // Bypass the unlock page completely
-        function bypassUnlockPage() {
-            const hasUnlockButtons = document.getElementById('readButton') && document.getElementById('watchButton');
-            const hasLockedButton = document.getElementById('lockedButton');
-            
-            if (hasUnlockButtons && hasLockedButton) {
-                console.log('Detected unlock page - bypassing all steps...');
-                
-                // Override the newLink function to prevent opening symaro.com
-                if (typeof window.newLink === 'function') {
-                    window.newLink = function() {
-                        console.log('Blocked symaro.com link generation');
-                        return 'about:blank';
-                    };
-                }
-                
-                // Parse URL parameters to get redirect URL
-                function parseUrlParameters() {
-                    const urlParams = new URLSearchParams(window.location.search);
-                    const encodedUrl = urlParams.get('URL');
-                    
-                    if (encodedUrl) {
-                        try {
-                            const redirectUrl = atob(encodedUrl);
-                            console.log('Found redirect URL:', redirectUrl);
-                            
-                            if (copyToClipboard(redirectUrl)) {
-                                showNotification('Download link copied to clipboard!');
-                            }
-                            
-                            return redirectUrl;
-                        } catch (error) {
-                            console.error('Error decoding URL:', error);
-                        }
-                    }
-                    return null;
-                }
-                
-                // Override the unlock page functions
-                window.handleButtonClick = function(type) {
-                    console.log('Bypassing button click:', type);
-                    
-                    const button = document.getElementById(type + 'Button');
-                    const status = document.getElementById(type + 'Status');
-                    
-                    if (type === 'read') {
-                        window.readCompleted = true;
-                        button.innerHTML = '📖 Read an Article <span class="checkmark">✓</span>';
-                        status.textContent = '✅ Completed';
-                        status.className = 'completed';
-                    } else {
-                        window.watchCompleted = true;
-                        button.innerHTML = '📰 Read a Blog <span class="checkmark">✓</span>';
-                        status.textContent = '✅ Completed';
-                        status.className = 'completed';
-                    }
-                    
-                    checkUnlockStatus();
-                };
-                
-                window.checkUnlockStatus = function() {
-                    if (window.readCompleted && window.watchCompleted) {
-                        const lockedButton = document.getElementById('lockedButton');
-                        lockedButton.disabled = false;
-                        lockedButton.textContent = '🔓 Unlocked';
-                        lockedButton.className = 'button unlocked-button';
-                        
-                        // Auto-click the unlocked button
-                        setTimeout(() => {
-                            handleLockedButton();
-                        }, 500);
-                    }
-                };
-                
-                window.handleLockedButton = function() {
-                    console.log('Bypassing locked button...');
-                    
-                    const redirectUrl = parseUrlParameters();
-                    if (redirectUrl) {
-                        // Auto-redirect to the download URL
-                        setTimeout(() => {
-                            window.location.href = redirectUrl;
-                        }, 1000);
-                    } else {
-                        // Fallback to direct download
-                        showNotification('No redirect URL found - using direct download', 'error');
-                        setTimeout(() => {
-                            const directUrl = 'itms-services://?action=download-manifest&url=https%3A%2F%2Fdeltaios-executor.com%2FInstall21.plist';
-                            window.location.href = directUrl;
-                        }, 1500);
-                    }
-                };
-                
-                // Auto-start the bypass process immediately
-                setTimeout(() => {
-                    // Auto-complete both tasks
-                    window.handleButtonClick('read');
-                    window.handleButtonClick('watch');
-                }, 500);
-            }
+        // Detect if we're on an unlock page
+        function isUnlockPage() {
+            return document.getElementById('readButton') && 
+                   document.getElementById('watchButton') && 
+                   document.getElementById('lockedButton');
         }
 
-        // Execute bypass
-        bypassUnlockPage();
-        
-        // Handle URL parameters for immediate redirect
-        const urlParams = new URLSearchParams(window.location.search);
-        const encodedUrl = urlParams.get('URL');
-        if (encodedUrl && document.getElementById('lockedButton')) {
-            try {
-                const redirectUrl = atob(encodedUrl);
-                console.log('Auto-redirecting to:', redirectUrl);
+        // Bypass the unlock page completely
+        function bypassUnlockPage() {
+            if (!isUnlockPage()) {
+                console.log('Not an unlock page, skipping bypass');
+                return false;
+            }
+
+            console.log('Detected unlock page - bypassing all steps...');
+            showNotification('Bypassing unlock steps...');
+
+            // Override the newLink function to prevent opening symaro.com
+            if (typeof window.newLink === 'function') {
+                window.newLink = function() {
+                    console.log('Blocked symaro.com link generation');
+                    return 'about:blank';
+                };
+            }
+            
+            // Parse URL parameters to get redirect URL
+            function parseUrlParameters() {
+                const urlParams = new URLSearchParams(window.location.search);
+                const encodedUrl = urlParams.get('URL');
                 
-                // Copy to clipboard
-                copyToClipboard(redirectUrl);
-                showNotification('Download link copied! Redirecting...');
+                if (encodedUrl) {
+                    try {
+                        const redirectUrl = atob(encodedUrl);
+                        console.log('Found redirect URL:', redirectUrl);
+                        return redirectUrl;
+                    } catch (error) {
+                        console.error('Error decoding URL:', error);
+                    }
+                }
+                return null;
+            }
+            
+            // Override the unlock page functions
+            window.handleButtonClick = function(type) {
+                console.log('Bypassing button click:', type);
                 
-                // Auto-redirect after short delay
-                setTimeout(() => {
-                    window.location.href = redirectUrl;
-                }, 1500);
-            } catch (error) {
-                console.error('Error decoding redirect URL:', error);
+                const button = document.getElementById(type + 'Button');
+                const status = document.getElementById(type + 'Status');
+                
+                if (type === 'read') {
+                    window.readCompleted = true;
+                    button.innerHTML = '📖 Read an Article <span class="checkmark">✓</span>';
+                    status.textContent = '✅ Completed';
+                    status.className = 'completed';
+                } else {
+                    window.watchCompleted = true;
+                    button.innerHTML = '📰 Read a Blog <span class="checkmark">✓</span>';
+                    status.textContent = '✅ Completed';
+                    status.className = 'completed';
+                }
+                
+                checkUnlockStatus();
+            };
+            
+            window.checkUnlockStatus = function() {
+                if (window.readCompleted && window.watchCompleted) {
+                    const lockedButton = document.getElementById('lockedButton');
+                    lockedButton.disabled = false;
+                    lockedButton.textContent = '🔓 Unlocked';
+                    lockedButton.className = 'button unlocked-button';
+                    
+                    // Auto-click the unlocked button
+                    setTimeout(() => {
+                        handleLockedButton();
+                    }, 500);
+                }
+            };
+            
+            window.handleLockedButton = function() {
+                console.log('Bypassing locked button...');
+                showNotification('Unlock completed! Getting download...');
+                
+                const redirectUrl = parseUrlParameters();
+                if (redirectUrl) {
+                    // Copy to clipboard and redirect
+                    if (copyToClipboard(redirectUrl)) {
+                        showNotification('Download link copied! Redirecting...');
+                    }
+                    
+                    // Auto-redirect to the download URL
+                    setTimeout(() => {
+                        window.location.href = redirectUrl;
+                    }, 1500);
+                } else {
+                    // Fallback to direct download for Delta/Krnl
+                    showNotification('Using direct download method');
+                    setTimeout(() => {
+                        // Try common Delta/Krnl download URLs
+                        const directUrls = [
+                            'itms-services://?action=download-manifest&url=https://deltaios-executor.com/Install21.plist',
+                            'itms-services://?action=download-manifest&url=https://krnl-ios.com/Install21.plist',
+                            'https://deltaios-executor.com/Delta_Executor.ipa',
+                            'https://krnl-ios.com/Krnl_IOS.ipa'
+                        ];
+                        
+                        // Try each URL until one works
+                        let currentIndex = 0;
+                        function tryNextUrl() {
+                            if (currentIndex < directUrls.length) {
+                                const url = directUrls[currentIndex];
+                                console.log('Trying download URL:', url);
+                                window.location.href = url;
+                                currentIndex++;
+                                setTimeout(tryNextUrl, 2000);
+                            }
+                        }
+                        tryNextUrl();
+                    }, 1000);
+                }
+            };
+            
+            // Auto-start the bypass process immediately
+            setTimeout(() => {
+                // Auto-complete both tasks
+                window.handleButtonClick('read');
+                window.handleButtonClick('watch');
+            }, 800);
+            
+            return true;
+        }
+
+        // Handle direct URL parameters for immediate redirect
+        function handleDirectRedirect() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const encodedUrl = urlParams.get('URL');
+            
+            if (encodedUrl) {
+                try {
+                    const redirectUrl = atob(encodedUrl);
+                    console.log('Direct redirect detected:', redirectUrl);
+                    
+                    // Copy to clipboard
+                    if (copyToClipboard(redirectUrl)) {
+                        showNotification('Download link copied! Redirecting...');
+                    }
+                    
+                    // Auto-redirect after short delay
+                    setTimeout(() => {
+                        window.location.href = redirectUrl;
+                    }, 1000);
+                    return true;
+                } catch (error) {
+                    console.error('Error decoding redirect URL:', error);
+                }
+            }
+            return false;
+        }
+
+        // Main execution
+        if (!handleDirectRedirect()) {
+            if (!bypassUnlockPage()) {
+                // If not an unlock page, still block ads and handle symaro
+                console.log('Running ad-blocking features only');
             }
         }
         
         // Handle symaro.com - close immediately
         if (window.location.hostname.includes('symaro.com')) {
             console.log('On symaro.com - closing tab');
+            showNotification('Closing ad page...');
             setTimeout(() => {
                 window.close();
                 // If tab doesn't close, go back
@@ -274,18 +321,29 @@
             }, 300);
         }
 
-        // Block script elements
+        // Enhanced script blocking
         const originalCreateElement = document.createElement;
         document.createElement = function(tagName) {
             const element = originalCreateElement.call(this, tagName);
             if (tagName.toLowerCase() === 'script') {
                 const originalSetAttribute = element.setAttribute;
                 element.setAttribute = function(name, value) {
-                    if (name === 'src' && blockedScripts.some(blocked => value.includes(blocked))) {
+                    if (name === 'src' && blockedScripts.some(blocked => value && value.includes(blocked))) {
                         console.log('Blocked script:', value);
+                        showNotification(`Blocked: ${value.split('/').pop()}`);
                         return;
                     }
                     return originalSetAttribute.call(this, name, value);
+                };
+                
+                // Also block inline scripts that might contain symaro calls
+                const originalAppendChild = element.appendChild;
+                element.appendChild = function(child) {
+                    if (child.nodeType === 3 && child.textContent && child.textContent.includes('symaro')) {
+                        console.log('Blocked inline script with symaro');
+                        return child;
+                    }
+                    return originalAppendChild.call(this, child);
                 };
             }
             return element;
@@ -298,7 +356,14 @@
                     if (node.nodeName === 'IFRAME') {
                         const src = node.src || '';
                         if (blockedScripts.some(blocked => src.includes(blocked))) {
+                            console.log('Blocked iframe:', src);
                             node.remove();
+                        }
+                    }
+                    // Also check for unlock page elements being added dynamically
+                    if (node.nodeType === 1 && node.querySelector) {
+                        if (node.querySelector('#readButton') && node.querySelector('#lockedButton')) {
+                            setTimeout(bypassUnlockPage, 100);
                         }
                     }
                 });
@@ -311,7 +376,7 @@
         window.fetch = function(...args) {
             if (blockedScripts.some(blocked => args[0] && args[0].includes(blocked))) {
                 console.log('Blocked fetch request:', args[0]);
-                return Promise.reject(new Error('Blocked by user script'));
+                return Promise.reject(new Error('Blocked by Delta/Krnl Bypass'));
             }
             return originalFetch.apply(this, args);
         };
@@ -319,7 +384,7 @@
         // Override XMLHttpRequest
         const originalXHROpen = XMLHttpRequest.prototype.open;
         XMLHttpRequest.prototype.open = function(method, url, ...args) {
-            if (blockedScripts.some(blocked => url.includes(blocked))) {
+            if (blockedScripts.some(blocked => url && url.includes(blocked))) {
                 console.log('Blocked XHR request:', url);
                 this._blocked = true;
                 return;
@@ -340,9 +405,22 @@
         window.open = function(url, ...args) {
             if (url && url.includes('symaro.com')) {
                 console.log('Blocked symaro.com navigation:', url);
+                showNotification('Blocked ad page popup');
                 return null;
             }
             return originalWindowOpen.call(this, url, ...args);
         };
+
+        // Prevent page from opening symaro.com
+        const originalAssign = window.location.assign;
+        window.location.assign = function(url) {
+            if (url && url.includes('symaro.com')) {
+                console.log('Blocked location.assign to symaro.com');
+                return;
+            }
+            return originalAssign.call(this, url);
+        };
+
+        console.log('Delta/Krnl Bypass v5 fully loaded');
     }
 })();
